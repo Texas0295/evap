@@ -1,0 +1,65 @@
+.TH EVAP 1 "July 2025" "evap 0.1" "User Commands"
+.SH NAME
+evap \- ephemeral text editor buffer with zero residue
+.SH SYNOPSIS
+.B evap
+[\fI--editor=CMD\fR] [\fI--keep\fR] [\fI--no-output\fR] [\fI--null-end\fR] [\fI--help\fR] [\fI--version\fR]
+.SH DESCRIPTION
+.B evap
+is a minimal command-line tool that opens your preferred text editor to provide a transient buffer for writing short notes or messages. Upon exiting the editor, the content is printed to standard output and the temporary file is destroyed.
+
+It is designed to act as a composable UNIX tool for temporary editing and piping data without leaving traces on disk.
+
+.SH OPTIONS
+.TP
+\fB--editor=\fICOMMAND\fR
+Specify the editor to use instead of $EDITOR or default \fBvi\fR.
+.TP
+\fB--keep\fR
+Keep the temporary file after use. Useful for debugging.
+.TP
+\fB--no-output\fR
+Suppress output to stdout. Useful for testing editor behavior.
+.TP
+\fB--null-end\fR
+Terminate output with a null byte (\fB\\0\fR) instead of a newline. Useful for piping into \fBxargs -0\fR or similar tools.
+.TP
+\fB--help\fR
+Show usage information.
+.TP
+\fB--version\fR
+Show version information.
+
+.SH EXAMPLES
+.TP
+\fBevap | xargs echo "Message:"\fR
+Open editor, write message, and print it prefixed by "Message:".
+.TP
+\fBevap --null-end | xargs -0 printf "[%s]\\n"\fR
+Use evap with null-terminated output for safe piping into \fBxargs\fR.
+
+.SH USAGE NOTES
+evap is designed to start a pipeline, not to receive input from one.  
+It will exit with an error if standard input is not a TTY.  
+This ensures it is used only as the beginning of a pipeline.
+
+Incorrect usage:
+.RS
+echo "text" | evap
+.RE
+
+Correct usage:
+.RS
+evap | your-processing-tool
+.RE
+
+.SH AUTHOR
+Written by Texas0295.
+
+.SH LICENSE
+MIT License.
+
+.SH SEE ALSO
+.BR vi (1),
+.BR xargs (1),
+.BR mktemp (1)
