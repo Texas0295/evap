@@ -1,3 +1,8 @@
+/* evap - A minimal ephemeral editing buffer for the terminal.
+ * 
+ * Copyright (c) 2025 Texas0295 <kimura@texas0295.top>
+ * Licensed under the MIT License. See LICENSE file in the project root for details.
+ */
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +21,14 @@ struct Config {
     int no_output;
     int null_end;
 };
+
+void print_help(void);
+int parse_args(int argc, char **argv, struct Config *cfg);
+char *make_tempfile(char *buf, size_t size);
+int launch_editor(const char *editor, const char *path);
+int print_buffer(const char *path, int null_end);
+static void secure_wipe(const char *path);
+int main(int argc, char **argv);
 
 void print_help(void) {
     puts("Usage: evap [OPTIONS]");
