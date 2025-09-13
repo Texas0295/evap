@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -Wall -std=c99
+CFLAGS = -O2 -Wall -std=c89
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
 MANDIR = $(PREFIX)/share/man/man1

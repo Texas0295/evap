@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 
 #define VERSION "0.1"
 
@@ -29,7 +30,8 @@ void print_help(void) {
 }
 
 int parse_args(int argc, char **argv, struct Config *cfg) {
-    for (int i = 1; i < argc; i++) {
+    int i;
+    for (i = 1; i < argc; i++) {
         const char *arg = argv[i];
 
         if (strcmp(arg, "--keep") == 0) {
@@ -106,7 +108,47 @@ int print_buffer(const char *path, int null_end) {
     return 0;
 }
 
+static void secure_wipe(const char *path) {
+    int fd = -1;
+    struct stat stbuf;
+    off_t size;
+    char buf[4096];
+    ssize_t n, written, ret;
+
+    fd = open(path, O_WRONLY);
+    if (fd < 0)
+        return;
+
+    if (fstat(fd, &stbuf) != 0)
+        goto cleanup;
+
+    size = stbuf.st_size;
+    memset(buf, 0, sizeof(buf));
+
+    while (size > 0) {
+        n = (size > (off_t)sizeof(buf)) ? sizeof(buf) : size;
+        written = 0;
+
+        while (written < n) {
+            ret = write(fd, buf + written, n - written);
+            if (ret <= 0)
+                goto cleanup;
+            written += ret;
+        }
+
+        size -= n;
+    }
+
+    fsync(fd);
+
+cleanup:
+    close(fd);
+}
+
 int main(int argc, char **argv) {
+    struct rlimit rl = {0,0};
+    setrlimit(RLIMIT_CORE,&rl); /* disable core dumps */
+
     struct Config cfg = {
         .editor = getenv("EDITOR"),
         .keep = 0,
@@ -141,6 +183,7 @@ int main(int argc, char **argv) {
         print_buffer(path, cfg.null_end);
 
     if (!cfg.keep) {
+        secure_wipe(path);
         unlink(path);
     } else {
         fprintf(stderr, "[EVAP] [INFO] Kept temporary file: %s\n", path);
