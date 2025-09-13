@@ -60,11 +60,22 @@ int parse_args(int argc, char **argv, struct Config *cfg) {
 }
 
 char *make_tempfile(char *buf, size_t size) {
-    const char *tmpdir = getenv("TMPDIR");
-    if (!tmpdir || strlen(tmpdir) > 200) tmpdir = "/tmp";
+    const char *tmpdir = NULL;
+
+    if (access("/dev/shm", W_OK | X_OK) == 0) {
+        tmpdir = "/dev/shm";
+    } else {
+        tmpdir = getenv("TMPDIR");
+    }
+
+    if (!tmpdir || strlen(tmpdir) > 200) {
+        tmpdir = "/tmp";
+    }
+
     snprintf(buf, size, "%s/evapXXXXXX", tmpdir);
     int fd = mkstemp(buf);
     if (fd < 0) return NULL;
+
     fchmod(fd, S_IRUSR | S_IWUSR);
     close(fd);
     return buf;
